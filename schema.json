@@ -1,0 +1,13 @@
+{
+    "$schema": "https://json-schema.org/draft-04/schema",
+    "id": "https://execs.qhpea.org/schema",
+    "title": "Execs",
+    "definitions": {
+        "exec": {
+            "type": "object",
+            "properties": {
+
+            }
+        }
+    }
+}
