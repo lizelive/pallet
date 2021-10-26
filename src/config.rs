@@ -1,9 +1,13 @@
+use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 struct Network;
 
-enum KnowFormats {
-    /// generate a json file
-    Json,
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum PassAss {
+    /// generate a json file
+    ConnectionFileArg,
     /// set every value as an enviorment varible
     Env
 }
@@ -27,8 +31,20 @@ pub struct Port {
     host: Option<String>,
 }
 
-struct RuntimeConfig {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Config {
     ports: Vec<Port>,
-    secrets: HashMap<String, String>,
-    pass_as: Option<KnowFormats>,
+    config: HashMap<String, String>,
+    pass_as: Option<PassAss>,
 }
+
+impl Config {
+    fn to_map(&self){
+
+    }
+
+    fn find_ports(&mut self){
+
+    }
+}
+

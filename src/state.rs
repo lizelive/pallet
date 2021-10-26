@@ -1,4 +1,7 @@
+use chrono::{DateTime, Utc};
+pub type Timestamp = DateTime<Utc>;
 
+use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum HealthcheckStatus {
     Starting,
@@ -8,9 +11,9 @@ pub enum HealthcheckStatus {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Action {
-    /// nicely request a restart 
+    /// nicely request a restart
     Restart,
-    
+
     /// Nicely request pause.
     Pause,
 
@@ -21,14 +24,14 @@ pub enum Action {
     Remove,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Copy)]
 pub enum Status {
     /// Starting up
     Created,
 
     /// Restarting
     Restarting,
-    
+
     /// Running healthy
     Running,
 
@@ -37,17 +40,23 @@ pub enum Status {
 
     /// exited and not restartable
     Dead,
-    
+
     /// Stoped
     Exited,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+impl Default for Status {
+    fn default() -> Self {
+        Self::Created
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct State {
     status: Status,
-    pulse: Option<DateTime<Utc>>,
-    started: Option<DateTime<Utc>>,
-    exited: Option<DateTime<Utc>>,
+    pulse: Option<Timestamp>,
+    started: Option<Timestamp>,
+    exited: Option<Timestamp>,
     health: Option<HealthcheckStatus>,
     exit_code: Option<i64>,
     error: Option<String>,
@@ -60,16 +69,16 @@ impl State {
         Self {
             status: Status::Created,
             pulse,
-            started_at: None,
-            finished_at: None,
+            started: None,
+            exited: None,
             health: None,
             exit_code: None,
             error: None,
-            pid: None,
+            id: None,
         }
     }
 
-    /// Set the state's error.
+    /// helper function to add an error.
     pub fn add_error(&mut self, error: String) {
         if let Some(old_error) = &self.error {
             self.error = Some(format!("{}; {}", old_error, error));
@@ -78,4 +87,3 @@ impl State {
         }
     }
 }
-

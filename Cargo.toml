@@ -1,21 +1,49 @@
 [package]
-name = "execs"
+name = "pallet"
 version = "0.1.0"
 edition = "2018"
+readme = "README.md"
+repository = "https://github.com/lizelive/pallet"
+homepage = "https://github.com/lizelive/pallet"
+documentation = "https://github.com/lizelive/pallet"
 
+license = "MIT OR Apache-2.0"
+description = "a portable executable code unit"
+keywords = ["command", "scripting", "shell"]
+
+categories = ["command-line-interface", "os"]
+
+authors = ["LizeLive <me@lize.live>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 shlex = "1"
-schemars = { version = "0.8", features = ["url", "chrono"] }
 thiserror = "1"
 serde = { version = "1", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
-serde_json = { version = "1", features = ["preserve_order"] }
 url = { version = "2", features = ["serde"] }
 tracing = "0.1"
 async-trait = "*"
-anyhow = "1"
-tempfile="3"
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+tempfile = "3"
+reqwest = { version = "0.11", features = ["blocking"] }
 shellexpand = "2"
+tokio = { version = "1", features = ["full"] }
+# gluon = { version = "0.18.1", features = ["regex", "web", "serialization"] }
+
+# embeded posix complient shell
+# oursh = "0.4.3"
+
+# macros to make life cleaner
+getset = "0.1.1"
+derive_builder = "0.10.2"
+
+# infer type
+tree_magic = "0.2.3"
+
+[dev-dependencies]
+anyhow = "1"
+schemars = { version = "0.8", features = ["url", "chrono"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[build-dependencies]
+#lalrpop = "0.19.6"
