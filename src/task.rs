@@ -1,25 +1,23 @@
 /// The payload data format
 
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::{fmt::Display, fs::File};
-use std::io::Write;
-use std::path::{Path, PathBuf};
-use std::process;
-use tempfile::{TempDir, TempPath};
+use std::process::ChildStderr;
+use tempfile::TempDir;
+use tokio::process::{ChildStdin, ChildStdout};
 use url::Url;
 
 use crate::config::Config;
 use crate::state::State;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+
+
+#[derive(Serialize, Deserialize)]
+#[derive(Debug, PartialEq)]
 #[serde(untagged)]
 pub enum Source {
     Url(Url),
     Text(String),
 }
-pub const ENTRYPOINT_NAME: &str = "entrypoint";
 
 // impl Source {
 //     fn copy_to_temp(&self) -> anyhow::Result<TempDir> {
@@ -40,7 +38,9 @@ pub const ENTRYPOINT_NAME: &str = "entrypoint";
 //     }
 // }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[derive(Debug)]
+#[derive(Clone, PartialEq)]
 enum Expansion {
     /// pass as, escaping as needed to make that happen
     Escape,
@@ -59,7 +59,12 @@ impl Default for Expansion {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+#[derive(Builder)]
+#[derive(Getters)]
+#[derive(Serialize, Deserialize)]
+#[derive(Debug)]
+#[derive(PartialEq)]
+#[derive(Clone)]
 pub struct Context {
     #[serde(default)]
     args: Vec<String>,
@@ -80,8 +85,23 @@ pub struct Context {
     #[serde(default)]
     /// run using this directory
     cwd: Option<String>,
+
+    stdin: Option<IoMode>,
 }
 
+#[derive(Serialize, Deserialize)]
+#[derive(Debug)]
+#[derive(PartialEq)]
+#[derive(Clone)]
+pub enum IoMode {
+    Store,
+    Pipe,
+}
+
+#[derive(Serialize, Deserialize)]
+#[derive(Builder)]
+#[derive(Getters)]
+#[derive(Debug)]
 pub struct Payload {
     /// which interperter to use
     //pub interpreter: Option<Interpreter>,
@@ -97,52 +117,66 @@ pub struct Payload {
     pub config: Config,
 }
 
-pub struct StdIo {
-    r#in: String,
-    err: String,
-    out: String,
+#[derive(MutGetters, Setters)]
+#[derive(Default)]
+#[derive(Debug)]
+pub struct StdioPipes {
+    stdin: Option<ChildStdin>,
+    stdout: Option<ChildStdout>,
+    stderr: Option<ChildStderr>,
 }
 
+#[derive(Getters)]
+#[derive(Default)]
+#[derive(Serialize, Deserialize)]
+#[derive(Debug)]
+pub struct StdioCaptured {
+    stdout: Option<Box<[u8]>>,
+    stderr: Option<Box<[u8]>>,
+}
+
+#[derive(Debug)]
+#[derive(Getters)]
 pub struct Task {
-    pub state: State,
-    pub payload: Payload,
-    pub std: StdIo,
-    pub tmp: TempDir,
+    state: State,
+    payload: Payload,
+    io: StdioPipes,
+    tmp: TempDir,
 }
 
+#[derive(Serialize, Deserialize)]
+#[derive(Debug)]
+#[derive(Getters)]
 pub struct Output {
-    pub state: State,
-    pub payload: Payload,
-    pub std: StdIo,
+    state: State,
+    payload: Payload,
+    std: StdioCaptured,
 }
 
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub enum Interpreter {
-    ///Execute using the Bourne shell, or a compatible shell, assumed to be in the /bin/sh directory
-    BourneShell,
+// #[derive(Serialize, Deserialize, Debug, PartialEq)]
+// pub enum Interpreter {
+//     ///Execute using the Bourne shell, or a compatible shell, assumed to be in the /bin/sh directory
+//     BourneShell,
 
-    /// Execute the task as Bash shell
-    Bash,
+//     /// Execute the task as Bash shell
+//     Bash,
 
-    /// Execute using PowerShell
-    PowerShell,
+//     /// Execute using PowerShell
+//     PowerShell,
 
-    /// execute using env program search path to find it
-    Env { command: String },
+//     /// execute using env program search path to find it
+//     Env { command: String },
 
-    /// use a custom shebang line. must start with #!
-    Shebang { shebang: String },
+//     /// use a custom shebang line. must start with #!
+//     Shebang { shebang: String },
 
-    ///Do nothing, but return a non-zero exit status, indicating failure. Used to prevent stand-alone execution of a script file intended for execution in a specific context, such as by the . command from sh/bash, source from csh/tcsh, or as a .profile, .cshrc, or .login file.
-    False,
+//     ///Do nothing, but return a non-zero exit status, indicating failure. Used to prevent stand-alone execution of a script file intended for execution in a specific context, such as by the . command from sh/bash, source from csh/tcsh, or as a .profile, .cshrc, or .login file.
+//     False,
 
-    /// do nothing but return true.
-    True,
-
-    /// use embeded gluon interperter
-    Gluon,
-}
+//     /// do nothing but return true.
+//     True,
+// }
 
 // impl Payload {
 //     /// Get a reference to the exec's program.

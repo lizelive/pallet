@@ -1,12 +1,22 @@
-/// A portable unit of code designed to be executed remotely
+//! A portable unit of code designed to be executed remotely
 
 use thiserror::Error;
 
+mod errors;
 mod state;
 mod config;
 mod task;
 mod exec;
 mod sniff;
+
+#[macro_use]
+extern crate derive_builder;
+
+#[macro_use]
+extern crate getset;
+
+#[macro_use]
+extern crate serde;
 
 #[derive(Error, Debug)]
 pub enum ParseError {
