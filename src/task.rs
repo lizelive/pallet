@@ -65,6 +65,7 @@ impl Default for Expansion {
 #[derive(Debug)]
 #[derive(PartialEq)]
 #[derive(Clone)]
+#[getset(get = "pub")]
 pub struct Context {
     #[serde(default)]
     args: Vec<String>,
@@ -94,8 +95,8 @@ pub struct Context {
 #[derive(PartialEq)]
 #[derive(Clone)]
 pub enum IoMode {
-    Store,
     Pipe,
+    Ignore,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -119,11 +120,16 @@ pub struct Payload {
 
 #[derive(MutGetters, Setters)]
 #[derive(Default)]
-#[derive(Debug)]
 pub struct StdioPipes {
-    stdin: Option<ChildStdin>,
-    stdout: Option<ChildStdout>,
-    stderr: Option<ChildStderr>,
+    stdin: Option<pipe::PipeWriter>,
+    stdout: Option<pipe::PipeReader>,
+    stderr: Option<pipe::PipeWriter>,
+}
+
+impl std::fmt::Debug for StdioPipes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("StdioPipes").field("stdin", &self.stdin.is_some()).field("stdout", &self.stdout.is_some()).field("stderr", &self.stderr).finish()
+    }
 }
 
 #[derive(Getters)]
@@ -140,7 +146,7 @@ pub struct StdioCaptured {
 pub struct Task {
     state: State,
     payload: Payload,
-    io: StdioPipes,
+    stdio: StdioPipes,
     tmp: TempDir,
 }
 
@@ -150,7 +156,11 @@ pub struct Task {
 pub struct Output {
     state: State,
     payload: Payload,
-    std: StdioCaptured,
+    stdio: StdioCaptured,
+}
+
+pub trait SecretProvider{
+
 }
 
 

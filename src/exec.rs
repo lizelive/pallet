@@ -1,6 +1,7 @@
 use crate::task::*;
 
 use crate::state::*;
+use anyhow::Context;
 use async_trait::async_trait;
 
 pub const ENTRYPOINT_NAME: &str = "entrypoint";
@@ -25,28 +26,66 @@ pub trait Executor {
 
 use std::collections::HashMap;
 use std::env;
+use std::path::Path;
 use std::process::Stdio;
 use tokio::process::*;
 
-pub fn fun() {
+pub fn fun(payload: Payload) {
     let filtered_env: HashMap<String, String> = env::vars()
         .filter(|&(ref k, _)| k == "TERM" || k == "TZ" || k == "LANG" || k == "PATH")
         .collect();
 
-    let mut command = Command::new("printenv");
+    let mut command = Command::new("echo");
 
     command
         .stdin(Stdio::piped())
-        .stdout(Stdio::inherit())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
         .env_clear()
         .envs(&filtered_env);
     let mut child = command.spawn().unwrap();
     let stdout = child.stdout.take().unwrap();
 }
+async fn start(payload: Payload) -> anyhow::Result<Task>{
+    let tmp = tempfile::TempDir::new().expect("can't get tmp directory");
+    let entrypoint = Path::join(tmp.as_ref(), "entrypoint");
+    let content = reqwest::blocking::get(payload.src.clone())?;
 
-fn start(payload: Payload) -> (Task, Run{
-    
-    Command::new(program)
+    let config = Path::join(tmp.as_ref(), "config.json");
+
+
+    let mut cmd = Command::new(entrypoint);
+    if *payload.context.ignore_environment(){
+        cmd.env_clear();
+    }
+
+    for (key, val) in payload.context.env() {
+        if let Some(value) = val {
+            cmd.env(key, value);
+        } else {
+            cmd.env_remove(key);
+        }
+    }
+
+
+//let pipes  = mut;
+
+    cmd.args(payload.context.args());
+
+    let state = Default::default();
+
+    let stdio = Default::default();
+
+    let child = cmd.spawn()?;
+    child.stdin.fi
+
+    let task = Task {
+        payload,
+        state,
+        stdio,
+        tmp
+    };
+    todo!()
 }
 
 /// manages running enviorments
