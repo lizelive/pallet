@@ -19,7 +19,9 @@ pub enum Protocol {
     Tcp,
     Udp,
 }
-
+impl Default for Protocol {
+    
+}
 #[derive(Serialize, Deserialize, Debug, Clone, Getters)]
 pub struct Port {
     /// dns label, up to 10 characters
